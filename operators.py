@@ -462,12 +462,13 @@ class SEQUENCER_OT_send_strip_to_audacity(bpy.types.Operator):
         sound_in = frames_to_sec(name.frame_offset_start)
         sound_out = str(frames_to_sec(name.frame_duration - name.frame_offset_end))
         sound_in = str(sound_in)
-
-        # Forward the file to Audacity 4 (AppImage will pass it to the existing instance)
+        # Check if user wants to open in new file or use existing session
         if props.send_to_new_file:
+            # Open new Audacity instance/file with this audio file
             utils.forward_file(bpy.path.abspath(name.sound.filepath))
         else:
-            utils.do_command(f'Import2: Filename={filename}')
+            # Import into existing Audacity session via pipe
+            utils.import_to_existing_audacity(bpy.path.abspath(name.sound.filepath))
         
         # We can no longer zoom or add labels because Audacity 4 has no IPC.
         set_volume(strip, True)
@@ -552,7 +553,7 @@ class SEQUENCER_OT_send_project_to_audacity(bpy.types.Operator):
             if props.send_to_new_file:
                 utils.forward_file(mixdown_path)
             else:
-                utils.do_command(f'Import2: Filename="{mixdown_path}"')
+                utils.import_to_existing_audacity(mixdown_path)
             
             # Mute the original clips in Blender so they don't double-play, mimicking the old behavior
             sequences = collect_sound_strips()
